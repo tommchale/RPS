@@ -2,11 +2,12 @@ import random
 import cv2
 from keras.models import load_model
 import numpy as np
+import time
 
 
 class RPS:
     def __init__(self):
-        self.rps_options = ['rock', 'paper', 'scissors', 'nothing']
+        self.rps_options = ['rock', 'paper', 'scissors']
 
     def get_computer_choice(self):
 
@@ -23,8 +24,8 @@ class RPS:
         # an Array of 1 dimensions 224*224*3
         # numpy.ndarray(shape, dtype=float, buffer=None, offset=0, strides=None, order=None)[source]
         data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-
-        while True:
+        timeout = time.time() + 5
+        while time.time() < timeout:
 
             # Captures the video frame by frame
             ret, frame = cap.read()
@@ -39,6 +40,18 @@ class RPS:
                                 127.0) - 1  # Normalize the image
             data[0] = normalized_image
             prediction = model.predict(data)
+            if prediction[0][0] > 0.5:
+                print('Rock')
+                self.user_choice = "rock"
+            elif prediction[0][1] > 0.7:
+                print('Scissors')
+                self.user_choice = "scissors"
+            elif prediction[0][2] > 0.5:
+                print("Paper")
+                self.user_choice = "paper"
+            elif prediction[0][3] > 0.5:
+                print("Nothing")
+
             # shows the image from the frame read by the camera
             cv2.imshow('frame', frame)
             # Press q to close the window
@@ -51,32 +64,37 @@ class RPS:
         # Destroy all the windows
         cv2.destroyAllWindows()
 
-        self.user_choice = prediction
-
         return self.user_choice
 
     def get_winner(self):
 
-        # self.get_computer_choice()
-        # self.get_user_choice()
+        self.get_computer_choice()
+        self.get_user_choice()
 
         if self.computer_choice == self.user_choice:
+            print(' \n You chose', self.user_choice, ' \n')
+            print(' \n The computer chose', self.computer_choice, ' \n')
             print('draw')
 
         elif (self.computer_choice == 'paper' and self.user_choice == 'rock') or (self.computer_choice == 'scissors' and self.user_choice == 'paper') or (self.computer_choice == 'rock' and self.user_choice == 'scissors'):
             self.winner = 'computer'
-            print(self.winner)
+            print(' \n You chose', self.user_choice, ' \n')
+            print(' \n The computer chose', self.computer_choice, ' \n')
+            print('\n The winner is...', self.winner)
             return self.winner
 
         else:
             self.winner = 'user'
-            print(self.winner)
+            print(' \n You chose', self.user_choice, ' \n')
+            print(' \n The computer chose', self.computer_choice, ' \n')
+            print('\n The winner is...', self.winner)
+
             return self.winner
 
 
 def play():
     game = RPS()
-    game.get_user_choice()
+    game.get_winner()
 
 
 play()
