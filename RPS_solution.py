@@ -9,6 +9,10 @@ import statistics
 
 class RPS:
     def __init__(self):
+        # loads the tenable model
+        self.model = load_model('keras_model.h5')
+        # opens the camera and defines a capture object
+        self.cap = cv2.VideoCapture(0)
         self.rps_options = ['rock', 'scissors', 'paper', 'nothing']
         self.computer_win_count = 0
         self.user_win_count = 0
@@ -49,7 +53,6 @@ class RPS:
                     self.fontScale, self.color, self.thickness, cv2.LINE_AA)
         # Resize image
         #self.frame = cv2.resize(self.frame, (480, 270))
-
         resized_frame = cv2.resize(
             self.frame, (224, 224), interpolation=cv2.INTER_AREA)
         image_np = np.array(resized_frame)
@@ -71,7 +74,6 @@ class RPS:
             self.message_upper_center = ""
             self.message_lower_center = ""
             self.run_camera()
-            # Define text details
             self.message_center = "Press 'q' to quit or 'c' to play RPS!"
             # Press c to continue the window
             if cv2.waitKey(1) & 0xFF == ord('c'):
@@ -109,10 +111,15 @@ class RPS:
         mode_index = statistics.mode(predicition_list)
         self.user_choice = self.rps_options[mode_index]
 
-    def game_over(self):
+    def get_user_choice(self):
 
-        # opens the camera and defines a capture object
-        #self.cap = cv2.VideoCapture(0)
+        while True:
+            self.intro()
+            self.present_choice()
+            self.compute_prediction()
+            break
+
+    def game_over(self):
 
         while True:
             self.message_center = "Press 'p' to play again, or 'q' to quit."
@@ -120,28 +127,15 @@ class RPS:
             self.message_upper_center = ""
             self.run_camera()
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.close_and_destroy_windows()
                 self.exit_flag = True
                 break
             elif cv2.waitKey(1) & 0xFF == ord('p'):
                 self.computer_win_count = 0
                 self.user_win_count = 0
-                # self.close_and_destroy_windows()
+                self.message_lower_left = ""
                 break
 
-    def get_user_choice(self):
-
-        # opens the camera and defines a capture object
-        self.cap = cv2.VideoCapture(0)
-
-        while True:
-            self.intro()
-            self.present_choice()
-            self.compute_prediction()
-            # self.close_and_destroy_windows()
-            break
-
-    def get_winner(self):
+    def compute_round_winner(self):
 
         self.get_computer_choice()
         self.get_user_choice()
@@ -160,38 +154,46 @@ class RPS:
         elif self.user_choice != 'nothing':
             self.winner = 'user'
 
+    def compute_total_score(self):
+
+        self.message_lower_left = (
+            f" User: {self.user_choice} Computer: {self.computer_choice}")
+
+        if self.winner == 'none':
+            self.message_lower_right = (
+                f"Please show an option and try again")
+
+        if self.winner == 'computer':
+            self.computer_win_count += 1
+            self.message_lower_right = (
+                f"The score is Computer: {self.computer_win_count} - User: {self.user_win_count}")
+
+        if self.winner == 'user':
+            self.user_win_count += 1
+            self.message_lower_right = (
+                f"The score is Computer: {self.computer_win_count} - User: {self.user_win_count}")
+
+    def check_for_winner(self):
+
+        if self.computer_win_count == 2:
+            self.message_lower_center = (
+                f"Unlucky the computer won {self.computer_win_count} : {self.user_win_count} ")
+            self.game_over()
+
+        elif self.user_win_count == 2:
+            self.message_lower_center = (
+                f"Congratulations you beat the computer {self.user_win_count} : {self.computer_win_count} ")
+            self.game_over()
+
     def play_game(self):
-        # loads the tenable model
-        self.model = load_model('keras_model.h5')
 
         while self.exit_flag == False:
 
-            self.get_winner()
+            self.compute_round_winner()
+            self.compute_total_score()
+            self.check_for_winner()
 
-            self.message_lower_left = (
-                f" User: {self.user_choice} Computer: {self.computer_choice}")
-
-            if self.winner == 'none':
-                self.message_lower_right = (
-                    f"Please show an option and try again")
-            if self.winner == 'computer':
-                self.computer_win_count += 1
-                self.message_lower_right = (
-                    f"The score is Computer: {self.computer_win_count} - User: {self.user_win_count}")
-            elif self.winner == 'user':
-                self.user_win_count += 1
-                self.message_lower_right = (
-                    f"The score is Computer: {self.computer_win_count} - User: {self.user_win_count}")
-
-            if self.computer_win_count == 2:
-                self.message_lower_center = (
-                    f"Unlucky the computer won {self.computer_win_count} : {self.user_win_count} ")
-                self.game_over()
-
-            elif self.user_win_count == 2:
-                self.message_lower_center = (
-                    f"Congratulations you beat the computer {self.user_win_count} : {self.computer_win_count} ")
-                self.game_over()
+        self.close_and_destroy_windows()
 
 
 def play():
