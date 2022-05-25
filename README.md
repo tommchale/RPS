@@ -1,4 +1,4 @@
-# RPS Gane
+# RPS Game
 
 Automated RPS game in which a user plays against a computer. The program accesses the webcam and uses a Keras model to detect whether the user is showing rock, paper, scossors or nothing.
 
