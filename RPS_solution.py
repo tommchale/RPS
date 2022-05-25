@@ -33,10 +33,6 @@ class RPS:
         self.message_lower_left = ""
         self.exit_flag = False
 
-    def get_computer_choice(self):
-
-        self.computer_choice = random.choice(self.rps_options[:3])
-
     def run_camera(self):
 
         ret, self.frame = self.cap.read()
@@ -62,19 +58,26 @@ class RPS:
         # shows the image from the frame read by the camera
         cv2.imshow('Camera Open', self.frame)
 
-    def close_and_destroy_windows(self):
-        # After the loop release the cap object
-        (self.cap).release()
-        # Destroy all the windows
-        cv2.destroyAllWindows()
+    def get_computer_choice(self):
+
+        self.computer_choice = random.choice(self.rps_options[:3])
+
+    def get_user_choice(self):
+
+        while True:
+            self.intro()
+            self.present_choice()
+            self.compute_prediction()
+            break
 
     def intro(self):
 
+        self.message_upper_center = ""
+        self.message_lower_center = ""
+        self.message_center = "Press 'q' to quit or 'c' to play RPS!"
+
         while True:
-            self.message_upper_center = ""
-            self.message_lower_center = ""
             self.run_camera()
-            self.message_center = "Press 'q' to quit or 'c' to play RPS!"
             # Press c to continue the window
             if cv2.waitKey(1) & 0xFF == ord('c'):
                 break
@@ -83,20 +86,15 @@ class RPS:
                 break
 
     def present_choice(self):
+        self.message_upper_center = "Please present choice in..."
         timeout = time.time() + 4
         while (timeout - time.time()) > 0:
             self.run_camera()
-            self.message_upper_center = "Please present choice in..."
             self.message_center = (
                 f"{timeout - time.time():.0f}")
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-    def get_prediction(self):
-        prediction = self.model.predict(self.data)
-        index = np.argmax(prediction[0])
-        return index
 
     def compute_prediction(self):
 
@@ -111,34 +109,12 @@ class RPS:
         mode_index = statistics.mode(predicition_list)
         self.user_choice = self.rps_options[mode_index]
 
-    def get_user_choice(self):
-
-        while True:
-            self.intro()
-            self.present_choice()
-            self.compute_prediction()
-            break
-
-    def game_over(self):
-
-        while True:
-            self.message_center = "Press 'p' to play again, or 'q' to quit."
-            self.message_lower_right = ""
-            self.message_upper_center = ""
-            self.run_camera()
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.exit_flag = True
-                break
-            elif cv2.waitKey(1) & 0xFF == ord('p'):
-                self.computer_win_count = 0
-                self.user_win_count = 0
-                self.message_lower_left = ""
-                break
+    def get_prediction(self):
+        prediction = self.model.predict(self.data)
+        index = np.argmax(prediction[0])
+        return index
 
     def compute_round_winner(self):
-
-        self.get_computer_choice()
-        self.get_user_choice()
 
         if self.user_choice == 'nothing':
             self.winner = 'none'
@@ -185,10 +161,36 @@ class RPS:
                 f"Congratulations you beat the computer {self.user_win_count} : {self.computer_win_count} ")
             self.game_over()
 
+    def game_over(self):
+
+        self.message_center = "Press 'p' to play again, or 'q' to quit."
+        self.message_lower_right = ""
+        self.message_upper_center = ""
+
+        while True:
+
+            self.run_camera()
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                self.exit_flag = True
+                break
+            elif cv2.waitKey(1) & 0xFF == ord('p'):
+                self.computer_win_count = 0
+                self.user_win_count = 0
+                self.message_lower_left = ""
+                break
+
+    def close_and_destroy_windows(self):
+        # After the loop release the cap object
+        (self.cap).release()
+        # Destroy all the windows
+        cv2.destroyAllWindows()
+
     def play_game(self):
 
         while self.exit_flag == False:
 
+            self.get_computer_choice()
+            self.get_user_choice()
             self.compute_round_winner()
             self.compute_total_score()
             self.check_for_winner()
