@@ -22,7 +22,7 @@ class RPS:
         self.fontScale = 1
         self.color = (255, 0, 255)
         self.thickness = 2
-        self.message_center = "Press 'c' to continue..."
+        self.message_center = ""
         self.message_upper_center = ""
         self.message_lower_center = ""
         self.message_lower_right = ""
@@ -69,13 +69,14 @@ class RPS:
 
         while True:
             self.message_upper_center = ""
+            self.message_lower_center = ""
             self.run_camera()
             # Define text details
             self.message_center = "Press 'q' to quit or 'c' to play RPS!"
             # Press c to continue the window
             if cv2.waitKey(1) & 0xFF == ord('c'):
                 break
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            elif cv2.waitKey(1) & 0xFF == ord('q'):
                 self.exit_flag = True
                 break
 
@@ -111,42 +112,39 @@ class RPS:
     def game_over(self):
 
         # opens the camera and defines a capture object
-        self.cap = cv2.VideoCapture(0)
+        #self.cap = cv2.VideoCapture(0)
 
         while True:
             self.message_center = "Press 'p' to play again, or 'q' to quit."
-            self.message_lower_left = ""
             self.message_lower_right = ""
             self.message_upper_center = ""
             self.run_camera()
-            if cv2.waitKey(0) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                self.close_and_destroy_windows()
                 self.exit_flag = True
                 break
-            if cv2.waitKey(0) & 0xFF == ord('p'):
+            elif cv2.waitKey(1) & 0xFF == ord('p'):
                 self.computer_win_count = 0
                 self.user_win_count = 0
-                self.close_and_destroy_windows()
+                # self.close_and_destroy_windows()
                 break
 
     def get_user_choice(self):
 
         # opens the camera and defines a capture object
         self.cap = cv2.VideoCapture(0)
-        while True:
 
+        while True:
             self.intro()
             self.present_choice()
             self.compute_prediction()
-            self.close_and_destroy_windows()
+            # self.close_and_destroy_windows()
             break
 
     def get_winner(self):
 
         self.get_computer_choice()
         self.get_user_choice()
-
-        self.message_lower_left = (
-            f" User: {self.user_choice} Computer: {self.computer_choice}")
 
         if self.user_choice == 'nothing':
             self.winner = 'none'
@@ -170,8 +168,10 @@ class RPS:
 
             self.get_winner()
 
+            self.message_lower_left = (
+                f" User: {self.user_choice} Computer: {self.computer_choice}")
+
             if self.winner == 'none':
-                print('Please go again and chose Rock, Paper or Scissors')
                 self.message_lower_right = (
                     f"Please show an option and try again")
             if self.winner == 'computer':
@@ -183,12 +183,12 @@ class RPS:
                 self.message_lower_right = (
                     f"The score is Computer: {self.computer_win_count} - User: {self.user_win_count}")
 
-            if self.computer_win_count == 1:
+            if self.computer_win_count == 2:
                 self.message_lower_center = (
                     f"Unlucky the computer won {self.computer_win_count} : {self.user_win_count} ")
                 self.game_over()
 
-            elif self.user_win_count == 1:
+            elif self.user_win_count == 2:
                 self.message_lower_center = (
                     f"Congratulations you beat the computer {self.user_win_count} : {self.computer_win_count} ")
                 self.game_over()
